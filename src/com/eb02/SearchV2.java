@@ -33,7 +33,7 @@ public class SearchV2 {
 
     public static void main(String[] args) throws Exception {
         String usage =
-                "Usage:\tjava org.apache.lucene.demo.SearchFiles [-index dir] [-queries file] [-run_id]\n\nCheck out our github for more details.";
+                "Usage:\tjava com.eb02.SearchV2 [-index dir] [-queries file] [-run_id]\n\nCheck out our github for more details.";
         if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
             System.out.println(usage);
             System.exit(0);
@@ -131,13 +131,18 @@ public class SearchV2 {
     public static void doPagingSearch(IndexSearcher searcher, Query query, String runCount, String runName) throws IOException {
 
         // Collect AT MOST, the top 1000 hits - roughly the same as the worst case scenario for relevance_judgements_for_CW09
-        TopDocs results = searcher.search(query, 1000);
+        TopDocs results = searcher.search(query, 1);
         // Put the results in "hits" variable
         ScoreDoc[] hits = results.scoreDocs;
 
+        // For outputting the results to file.
         File resultsOutput = new File("relevance_judgements.txt");
         FileWriter fr = new FileWriter(resultsOutput, true);
         int numTotalHits = Math.toIntExact(results.totalHits.value);
+        // This will get ALL the relevant documents possible.
+        if (numTotalHits > 0){
+            hits = searcher.search(query, numTotalHits).scoreDocs;
+        }
         int start = 0;
         int end = numTotalHits;
 
@@ -145,13 +150,14 @@ public class SearchV2 {
 
             Document doc = searcher.doc(hits[i].doc);
             String path = doc.get("path");
+            Float score = hits[i].score;
             // Simple. Trim after clueweb09PoolFilesTest.
             String[] parts = path.split("/");
 
             if (path != null) {
                 //fr.write(runCount + " " + "Q0 " + " " +  parts[1] + " " + (i+1) + " " + "4999" + " " + runName + "\n");
                 // Since the above is NOT working, when running this file, pipe the output to a file called "relevance_judgements1.txt"
-                System.out.print((runCount + " " + "Q0 " + " " +  parts[1] + " " + (i+1) + " " + "4999" + " " + runName + "\n"));
+                System.out.print((runCount + " " + "Q0 " + " " +  parts[1] + " " + (i+1) + " " + score + " " + runName + "\n"));
             } else {
                 System.out.println((i+1) + ". " + "No path for this document");
             }

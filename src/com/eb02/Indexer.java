@@ -105,8 +105,6 @@ public class Indexer {
             // uses the inputs from writer, as well as the "Docs" directory to index our files.
             indexDocs(writer, docDir);
 
-            // writer.forceMerge(1);
-
             writer.close();
 
             Date end = new Date();
@@ -122,13 +120,6 @@ public class Indexer {
     /**
      * Indexes the given file using the given writer, or if a directory is given,
      * recurses over files and directories found under the given directory.
-     *
-     * NOTE: This method indexes one document per input file.  This is slow.  For good
-     * throughput, put multiple documents into your input file(s).  An example of this is
-     * in the benchmark module, which can create "line doc" files, one document per line,
-     * using the
-     * <a href="../../../../../contrib-benchmark/org/apache/lucene/benchmark/byTask/tasks/WriteLineDocTask.html"
-     * >WriteLineDocTask</a>.
      *
      * @param writer Writer to the index where the given file/dir info will be stored
      * @param path The file to index, or the directory to recurse into to find files to index
@@ -180,8 +171,6 @@ public class Indexer {
 
             // Add the contents of the file to a field named "contents".  Specify a Reader,
             // so that the text of the file is tokenized and indexed, but not stored.
-            // Note that FileReader expects the file to be in UTF-8 encoding.
-            // If that's not the case searching for special characters will fail.
             doc.add(new TextField("contents", new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))));
 
             if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
