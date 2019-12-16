@@ -75,6 +75,15 @@ public class TF_IDF_Search {
             }
         }
 
+        if(index == "index"){
+            System.out.println(usage + "<< You missed to place the index");
+            System.exit(0);
+        }
+        if(queries == null){
+            System.out.println(usage + "<< You missed to place the queries");
+            System.exit(0);
+        }
+
         IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index))); //Open a new IndexReader object
         IndexSearcher searcher = new IndexSearcher(reader); // As a baseline, this works - Why?
                                                             // IndexSearcher implements TF-IDF internally.

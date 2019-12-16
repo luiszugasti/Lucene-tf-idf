@@ -1,5 +1,6 @@
 /*
  * Created by Luis Zugasti
+ * SDM Search based off of the TF-IDF similarity measure.
  */
 package com.eb02;
 
@@ -74,6 +75,15 @@ public class SDM_Search {
                 run_id = args[i+1];
                 i++;
             }
+        }
+
+        if(index == "index"){
+            System.out.println(usage + "<< You missed to place the index");
+            System.exit(0);
+        }
+        if(queries == null){
+            System.out.println(usage + "<< You missed to place the queries");
+            System.exit(0);
         }
 
         IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index))); //Open a new IndexReader object
