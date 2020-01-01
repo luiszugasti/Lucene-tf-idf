@@ -60,9 +60,9 @@ import static java.util.stream.Collectors.*;
 //import static java.util.Map.Entry.*;
 
 /** Simple command-line based search demo. */
-public class SearchSDM {
+public class UBGSDM {
 
-  private SearchSDM() {}
+  private UBGSDM() {}
 
   /** Simple command-line based search demo. */
   public static void main(String[] args) throws Exception {
@@ -163,29 +163,41 @@ public class SearchSDM {
       }
      // if(line.split("\\w+").length > 1) { //If query topic is more than one word
     //Get the ordered bigrams from topic
-      List<String> token = new ArrayList<String>();
-      TokenStream tokenizer = analyzer.tokenStream(null, new StringReader(line));
+      //List<String> token = new ArrayList<String>();
+      //TokenStream tokenizer = analyzer.tokenStream(null, new StringReader(line));
 
       //StopFilter stopWords = new StopFilter(tokenizer, StopFilter.makeStopSet(words, true));
-      ShingleFilter shingle = new ShingleFilter(tokenizer, 2);
+      //ShingleFilter shingle = new ShingleFilter(tokenizer, 2);
 
-      shingle.setOutputUnigrams(false);
-      shingle.setOutputUnigramsIfNoShingles(true);
+      //shingle.setOutputUnigrams(false);
+      //shingle.setOutputUnigramsIfNoShingles(true);
       //shingle.setFillerToken("_");
-      CharTermAttribute charTermAttribute = shingle.addAttribute(CharTermAttribute.class);
-      tokenizer.reset();
+      //CharTermAttribute charTermAttribute = shingle.addAttribute(CharTermAttribute.class);
+      //tokenizer.reset();
       
-      while(shingle.incrementToken()) {
-    	  token.add(charTermAttribute.toString());
+      //while(shingle.incrementToken()) {
+    //  token.add(charTermAttribute.toString());
     	  //System.out.println(charTermAttribute.toString()); //Print the bigrams for topic.
+     // }
+      //shingle.end();
+     // shingle.close();
+      ArrayList<String> unorder_bg = new ArrayList<String>();
+      String[] terms = line.split("\\W+");
+      if(terms.length > 1) {
+      for(int i = 0; i < terms.length-1; i++) {
+    	  for(int j = i+1; j < i+2; j++) {
+    		  unorder_bg.add(terms[i] + " " + terms[j]);
+    		  unorder_bg.add(terms[j] + " " + terms[i]);
+
+    	  }
       }
-      shingle.end();
-      shingle.close();
+      } else
+    	  unorder_bg.add(terms[0]);
       List<TopDocs> bigrams = new ArrayList<TopDocs>(); //List of results for each bigram group.
       //Iterate through the number of bigrams and add to bigrams list.
-      for (int x = 0; x < token.size(); x++) {
-      	Query query = parser.createPhraseQuery("contents", token.get(x));
-      	System.out.println(query.toString()); //Print searched bigrams
+      for (int x = 0; x < unorder_bg.size(); x++) {
+      	Query query = parser.createPhraseQuery("contents", unorder_bg.get(x));
+      	System.out.println(query.toString()); //Print searched unigrams
       	TopDocs results = searcher.search(query, hitsPerPage);
       	//ScoreDoc[] hits = results.scoreDocs;
       	bigrams.add(results); //Add results to the list
@@ -195,7 +207,7 @@ public class SearchSDM {
       	}  
       }
       //List<TopDocs> bg_1 = new ArrayList<TopDocs>(); 
-      List<OBGDocs> bg_list = new ArrayList<OBGDocs>(); //Final list of collected bigram results (didn't use yet) 
+      List<Docs> bg_list = new ArrayList<Docs>(); //Final list of collected bigram results (didn't use yet) 
       
 /*      if(bigrams.size() > 1) {
       //First bigram results copied to this list
@@ -231,7 +243,7 @@ public class SearchSDM {
         	  for(int a = 0; a < TotalHits; a++) {
         		  Document doc_tp = searcher.doc(tp.scoreDocs[a].doc);
         		  Double score = (tp.scoreDocs[a].score)/1.0;
-        		  OBGDocs bg = new OBGDocs(doc_tp.get("path"), score);
+        		  Docs bg = new Docs(doc_tp.get("path"), score);
         		  bg_list.add(bg); }
     	  }
 	  //}

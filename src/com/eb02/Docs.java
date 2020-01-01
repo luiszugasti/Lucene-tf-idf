@@ -1,10 +1,10 @@
 package com.eb02;
 
-public class OBGDocs {
+public class Docs {
 	public String document;
 	public Double score;
 	
-	public OBGDocs(String document, Double score) {
+	public Docs(String document, Double score) {
 		this.document = document;
 		this.score = score;
 	}
