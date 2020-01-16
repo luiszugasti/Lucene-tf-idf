@@ -22,9 +22,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-// import org.apache.lucene.search.similarities.TFIDFSimilarity;
 import org.apache.lucene.store.FSDirectory;
-// import org.apache.lucene.search.*;
 
 /** Simple command-line based search demo. */
 public class TF_IDF_Search {
