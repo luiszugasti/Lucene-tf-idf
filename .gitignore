@@ -1,2 +1,5 @@
 # Project exclude paths
 /out/
+
+# Iml file will be cross client
+Lucene-tf-idf.iml
