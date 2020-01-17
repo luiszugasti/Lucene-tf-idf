@@ -73,7 +73,8 @@ public class OBGSDM {
       System.exit(0);
     }
 
-    String index = "index";
+//    String index = "index";
+    String index = "locationTestIndex";
     String field = "contents";
     String queries = null;
     int repeat = 0;
@@ -123,7 +124,8 @@ public class OBGSDM {
     QueryParser parser = new QueryParser(field, analyzer);
     //Extract topic list from file
     List<String> topic = new ArrayList<String>();
-    FileReader fr = new FileReader("C:\\Users\\Naffan\\Desktop\\Ryerson\\Capstone\\topics.txt");
+    FileReader fr = new FileReader("C:\\Users\\i868145\\Downloads\\Lucene TestData\\CW09_topics.txt");
+    // ("C:\\Users\\Naffan\\Desktop\\Ryerson\\Capstone\\topics.txt");
     StringBuffer sb = new StringBuffer();
     while(fr.ready()) {
     	char c = (char) fr.read();
@@ -144,8 +146,8 @@ public class OBGSDM {
     	topic.set(topic.indexOf(topic.get(j)), topic.get(j).split("\\:")[1]);
     }
     //Write results to this file
-    String fname = "SDM-results.test";
-    BufferedWriter out = new BufferedWriter(new FileWriter(fname, true),32768);
+//    String fname = "SDM-results.test";
+//    BufferedWriter out = new BufferedWriter(new FileWriter(fname, true),32768);
     //Iterate over the topic list
     for(int e = 0; e < topic.size(); e++){
     	System.out.println(topic.get(e)); //Print the topic
@@ -278,7 +280,7 @@ public class OBGSDM {
 
     }
     reader.close();
-    out.close();
+//    out.close();
   }
 
   /**
