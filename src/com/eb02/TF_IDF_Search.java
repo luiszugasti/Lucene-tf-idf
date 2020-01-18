@@ -1,9 +1,6 @@
-/*
- * Created by Luis Zugasti
- */
 package com.eb02;
 
-
+// Standard Imports
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.File;
 
+// Lucene Imports
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -24,14 +22,28 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 
-/** Simple command-line based search demo. */
+/** TF-IDF: Term Frequency/Inverted Document Frequency
+ *
+ * Classically a search method that returns high quality search hits.
+ * Core to the Lucene Framework.
+ *
+ * ATTENTION: The code returns hits, **Assuming** That you are running the code within the document corpus folder.
+ * This way, we don't have to go through removing the path to the file you are accessing (much easier if for some
+ * reason you have this in a nested folder sequence). Inspect the run configuration.
+ *
+ * */
 public class TF_IDF_Search {
 
     private TF_IDF_Search() {}
 
     public static void main(String[] args) throws Exception {
+
+        // Usage string for command line interfaces, as well as input directives.
+        // Sample string:
+        // java com.eb02.TF_IDF_Search -index your_index_location -queries file_with_queries -run_id your_run_id_here
         String usage =
-                "Usage:\tjava com.eb02.SearchV2 [-index dir] [-queries file] [-run_id]\n\nCheck out our github for more details.";
+        "Usage:\tjava com.eb02.SearchV2 [-index dir] [-queries file] [-run_id]\n\nCheck out our github for more details.";
+
         if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
             System.out.println(usage);
             System.exit(0);
@@ -42,27 +54,9 @@ public class TF_IDF_Search {
         String queries = null;
         String run_id = null;
 
-        // List creation. Data structure that looks like:
-        // qN | stringOfQueries
-        //  1 |    .  .  .
-        //
-        // And so on...
-        class qString {
-            String qN;
-            String stringOfQueries;
-
-            public qString(String qN, String stringOfQueries){
-                this.qN = qN;
-                this.stringOfQueries = stringOfQueries;
-            }
-        }
-
         for(int i = 0;i < args.length;i++) {
             if ("-index".equals(args[i])) {
                 index = args[i+1];
-                i++;
-            } else if ("-field".equals(args[i])) {
-                field = args[i+1];
                 i++;
             } else if ("-queries".equals(args[i])) {
                 queries = args[i+1];
@@ -73,32 +67,37 @@ public class TF_IDF_Search {
             }
         }
 
-        if(index == "index"){
-            System.out.println(usage + "<< You missed to place the index");
-            System.exit(0);
-        }
-        if(queries == null){
-            System.out.println(usage + "<< You missed to place the queries");
-            System.exit(0);
-        }
+        // Simple error checking
 
-        IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index))); //Open a new IndexReader object
-        IndexSearcher searcher = new IndexSearcher(reader); // As a baseline, this works - Why?
-                                                            // IndexSearcher implements TF-IDF internally.
-                                                            // Thus, this completes the requirement of getting TF-IDF.
-                                                            // For now.
+        System.out.println("Review this information very carefully.\n\n +" +
+                "index location: " + index +
+                ", queries: " + queries +
+                ", run_id: " + run_id);
+
+
+        // Open a new IndexReader object, using index.
+        IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
+
+        // Open a new IndexSearcher object.
+        // As a baseline, this works - Why?
+        // IndexSearcher implements TF-IDF internally.
+
+        IndexSearcher searcher = new IndexSearcher(reader);
+
         Analyzer analyzer = new StandardAnalyzer();
 
         BufferedReader queryReader = null;
         if (queries != null) {
-            queryReader = Files.newBufferedReader(Paths.get(queries), StandardCharsets.UTF_8); // Open the path to our queries
+            // Open the path to our queries
+            queryReader = Files.newBufferedReader(Paths.get(queries), StandardCharsets.UTF_8);
         }
 
         QueryParser parser = new QueryParser(field, analyzer);
         while (true) {
 
-            String line = queryReader.readLine(); // Next: Catch the errors
+            String line = queryReader.readLine();
 
+            // EOF
             if (line == null) {
                 break;
             }
@@ -107,68 +106,26 @@ public class TF_IDF_Search {
             // ^regex - Finds regex that must match at the beginning of the line.
             // \d - Any digit, short for [0-9]
             // + - Occurs one or more times, is short for {1,} Example: X+- Finds one or several letter X
-            // For simplistic manners, I can just do this twice. OR Just split at the first instance of :
+            // For simplistic manners, I can just do this twice. OR Just split at the first instance of ":"
+
             String[] parts = line.split(":");
 
             // Assign the first part to qN, second part to stringOfQueries
-            qString test = new qString(parts[0], parts[1]);
-            //trim the stringOfQueries
+            QueryString test = new QueryString(parts[0], parts[1]);
+
+            // trim the stringOfQueries of any whitespace.
             test.stringOfQueries = test.stringOfQueries.trim();
+
+            // If we have an instance where there's no query provided...
             if (test.stringOfQueries.length() == 0) {
                 break;
             }
 
+            // Build a Lucene query.
             Query query = parser.parse(test.stringOfQueries);
-            // System.out.println("Searching for: " + query.toString(field));
 
-            doPagingSearch(searcher, query, test.qN, run_id);
+            HelperMethods.doPagingSearch(searcher, query, test.qN, run_id);
         }
         reader.close();
-    }
-
-    /**
-     * This returns a String with the relevance judgements for a single query.
-     *
-     * @param searcher: searcher Object to compute our search
-     * @param query: actual name of the query for the procedure to search
-     * @param runCount: number of the current query
-     * @param runName: name of the current run
-     */
-
-    public static void doPagingSearch(IndexSearcher searcher, Query query, String runCount, String runName) throws IOException {
-
-        // Collect AT MOST, the top 1000 hits - roughly the same as the worst case scenario for relevance_judgements_for_CW09
-        TopDocs results = searcher.search(query, 1);
-        // Put the results in "hits" variable
-        ScoreDoc[] hits = results.scoreDocs;
-
-        // For outputting the results to file.
-        File resultsOutput = new File("relevance_judgements.txt");
-        FileWriter fr = new FileWriter(resultsOutput, true);
-        int numTotalHits = Math.toIntExact(results.totalHits.value);
-        // This will get ALL the relevant documents possible.
-        if (numTotalHits > 0){
-            hits = searcher.search(query, numTotalHits).scoreDocs;
-        }
-        int start = 0;
-        int end = numTotalHits;
-
-        for (int i = start; i < end; i++) {
-
-            Document doc = searcher.doc(hits[i].doc);
-            String path = doc.get("path");
-            Float score = hits[i].score;
-            // Simple. Trim after clueweb09PoolFilesTest.
-            String[] parts = path.split("/");
-
-            if (path != null) {
-                //fr.write(runCount + " " + "Q0 " + " " +  parts[1] + " " + (i+1) + " " + "4999" + " " + runName + "\n");
-                // Since the above is NOT working, when running this file, pipe the output to a file called "relevance_judgements1.txt"
-                System.out.print((runCount + " " + "Q0 " + " " +  parts[1] + " " + (i+1) + " " + score + " " + runName + "\n"));
-            } else {
-                System.out.println((i+1) + ". " + "No path for this document");
-            }
-        }
-    fr.close();
     }
 }
