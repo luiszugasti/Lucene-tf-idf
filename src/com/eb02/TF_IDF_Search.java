@@ -1,26 +1,21 @@
 package com.eb02;
 
-// Standard Imports
-import java.io.BufferedReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.io.File;
-
 // Lucene Imports
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
+
+// Standard Imports
+import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 
 /** TF-IDF: Term Frequency/Inverted Document Frequency
  *
@@ -42,7 +37,7 @@ public class TF_IDF_Search {
         // Sample string:
         // java com.eb02.TF_IDF_Search -index your_index_location -queries file_with_queries -run_id your_run_id_here
         String usage =
-        "Usage:\tjava com.eb02.SearchV2 [-index dir] [-queries file] [-run_id]\n\nCheck out our github for more details.";
+        "Usage:\tjava com.eb02.TF_IDF_Search [-index dir] [-queries file] [-run_id]\n\nCheck out our github for more details.";
 
         if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
             System.out.println(usage);
@@ -95,6 +90,7 @@ public class TF_IDF_Search {
         QueryParser parser = new QueryParser(field, analyzer);
         while (true) {
 
+            // May lead to null pointer exception - consider cleaning up
             String line = queryReader.readLine();
 
             // EOF
@@ -103,10 +99,7 @@ public class TF_IDF_Search {
             }
 
             // Processing the inputs
-            // ^regex - Finds regex that must match at the beginning of the line.
-            // \d - Any digit, short for [0-9]
-            // + - Occurs one or more times, is short for {1,} Example: X+- Finds one or several letter X
-            // For simplistic manners, I can just do this twice. OR Just split at the first instance of ":"
+            // ^regex splits at the first instance of ":"
 
             String[] parts = line.split(":");
 
@@ -124,6 +117,7 @@ public class TF_IDF_Search {
             // Build a Lucene query.
             Query query = parser.parse(test.stringOfQueries);
 
+            // Output the search entries.
             HelperMethods.doPagingSearch(searcher, query, test.qN, run_id);
         }
         reader.close();
