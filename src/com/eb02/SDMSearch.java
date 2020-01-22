@@ -61,7 +61,7 @@ public class SDMSearch {
 	    int repeat = 0;
 	    boolean raw = false;
 	    String queryString = null;
-	    int hitsPerPage = 100;
+	    int hitsPerPage = 1000;
 	    //List of stop-words
 	    String[] words = {"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"};
 	    for(int i = 0;i < args.length;i++) {
@@ -125,7 +125,8 @@ public class SDMSearch {
 	    for (int j = 0; j < topic.size(); j++) {
 	    	topic.set(topic.indexOf(topic.get(j)), topic.get(j).split("\\:")[1]);
 	    }
-	    
+	    String fname = "SDMSearch-results2.test";
+	    BufferedWriter out = new BufferedWriter(new FileWriter(fname, true),32768);
 	  //Iterate over the topic list
 	    for(int e = 0; e < topic.size(); e++){
 	    	System.out.println(topic.get(e)); //Print the topic
@@ -187,7 +188,7 @@ public class SDMSearch {
 	      for (int x = 0; x < token.size(); x++) {
 	      	Query query = parser.createPhraseQuery("contents", token.get(x));
 	      	//System.out.println(query.toString()); 
-	      	TopDocs results = searcher.search(query, hitsPerPage);
+	      	TopDocs results = searcher.search(query, 1000);
 	      	ordered_bigrams.add(results); //Add results to the list
 	      	int numTotalHits = Math.toIntExact(results.totalHits.value);
 	      	if(numTotalHits > 0) {
@@ -199,7 +200,7 @@ public class SDMSearch {
 	      for (int x = 0; x < unorder_bg.size(); x++) {
 	        	Query query = parser.createPhraseQuery("contents", unorder_bg.get(x));
 	        	//System.out.println(query.toString()); 
-	        	TopDocs results = searcher.search(query, hitsPerPage);
+	        	TopDocs results = searcher.search(query, 1000);
 	        	unordered_bigrams.add(results); //Add results to the list
 	        	int numTotalHits = Math.toIntExact(results.totalHits.value);
 	        	if(numTotalHits > 0) {
@@ -210,7 +211,7 @@ public class SDMSearch {
 	      for (int x = 0; x < term.length; x++) {
 	        	Query query = parser.createPhraseQuery("contents", term[x]);
 	        	//System.out.println(query.toString()); 
-	        	TopDocs results = searcher.search(query, hitsPerPage);
+	        	TopDocs results = searcher.search(query, 10);
 	        	//ScoreDoc[] hits = results.scoreDocs;
 	        	unigrams.add(results); //Add results to the list
 	        	int numTotalHits = Math.toIntExact(results.totalHits.value);
@@ -269,7 +270,7 @@ public class SDMSearch {
 	    for(int j = 0; j < ubg_list.size(); j++) {
 	    	  String path = ubg_list.get(j).getDocument();
 	    	  Double final_score = ubg_list.stream().filter(o -> o.getDocument() == path).mapToDouble(o -> o.getScore()).sum(); 
-	    	  final_score = final_score/3.0; //LAMBDA = 1/3
+	    	  final_score = final_score/2.0; //LAMBDA = 1/2
 	    	  File f = new File(path);
 	    	  agg_UBG_list.put(f.getName(), final_score);		  	
 	      }
@@ -278,15 +279,15 @@ public class SDMSearch {
 	    for(int j = 0; j < ug_list.size(); j++) {
 	    	  String path = ug_list.get(j).getDocument();
 	    	  Double final_score = ug_list.stream().filter(o -> o.getDocument() == path).mapToDouble(o -> o.getScore()).sum(); 
-	    	  final_score = final_score/3.0;
+	    	  final_score = final_score/6.0; //LAMBDA = 1/6
 	    	  File f = new File(path);
 	    	  agg_UG_list.put(f.getName(), final_score);		  	
 	      }
 	    //MERGE HashMap results from each SDM implementation (ORDERED BIGRAM w/ UNORDERED BIGRAM)
-	    agg_UBG_list.forEach((k, v) -> agg_OBG_list.merge(k, v, (v1, v2) -> v1 + v2));
+	    agg_OBG_list.forEach((k, v) -> agg_UBG_list.merge(k, v, Double::sum));
 	    
 	  //MERGE HashMap results from each SDM implementation (UNORDERED BIGRAM w/ UNIGRAM)
-	    agg_UG_list.forEach((k, v) -> agg_UBG_list.merge(k, v, (v1, v2) -> v1 + v2));
+	    agg_UBG_list.forEach((k, v) -> agg_UG_list.merge(k, v, Double::sum));
 	    
 	    //SORT the HashMap for TREC results
 	    HashMap<String, Double> srt_list = agg_UG_list.entrySet().stream().sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2,
@@ -295,33 +296,20 @@ public class SDMSearch {
 		//PRINT results from final merged SDM HashMap	
 		int count = 0; 
 		for(String d: srt_list.keySet()) { 
+			String str = "";
 			if (srt_list.get(d) > 0.0 && count < 200) { //Print the result for debugging (not writing to file for now). 
-				System.out.println(topic.indexOf(topic.get(e))+1 + " " + "Q0" + " " + d + " " + (++count) + " " + srt_list.get(d) + " " + "Default"); }
-			  }
-			 
+				str = topic.indexOf(topic.get(e))+1 + " " + "Q0" + " " + d + " " + (++count) + " " + srt_list.get(d) + " " + "Default"; 
+				System.out.println(str); 
+				appendToFile(out,str);
+			}
 
-				 
+		}
 
 	    }
-	    //Write results to this file
-	    //String fname = "SDM-results.test";
-	    //BufferedWriter out = new BufferedWriter(new FileWriter(fname, true),32768);
-	    //Iterate over the topic list
 	   
 	    reader.close();
-	    //out.close();
+	    out.close();
 	  }
-
-	  /**
-	   * This demonstrates a typical paging search scenario, where the search engine presents 
-	   * pages of size n to the user. The user can then go to the next page if interested in
-	   * the next hits.
-	   * 
-	   * When the query is executed for the first time, then only enough results are collected
-	   * to fill 5 result pages. If the user wants to page beyond this limit, then the query
-	   * is executed another time and all hits are collected.
-	   * 
-	   */
 	  
 	  public static void appendToFile(BufferedWriter out, String str) {
 		  try {
