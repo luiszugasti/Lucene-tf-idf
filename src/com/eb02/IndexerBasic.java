@@ -1,7 +1,9 @@
-
 /*
  * This copy of the test indexer is used to learn the Lucene API and to view some of its capabilities in action.
  * It is inherently simple and just for the means of getting up and running.
+ *
+ * It is mostly un-edited from the indexing file proivded in the lucene tutorials. This indexer indexes EVERYTHING in a
+ * document, without stripping markup.
  */
 
 package com.eb02;
@@ -35,13 +37,12 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 /** Index all text files under a directory.
- * <p>
  * This is a command-line application demonstrating simple Lucene indexing.
  * Run it with no command-line arguments for usage information.
  */
-public class Indexer {
+public class IndexerBasic {
 
-    private Indexer() {}
+    private IndexerBasic() {}
 
     /** Index all text files under a directory. */
     public static void main(String[] args) {
@@ -97,7 +98,8 @@ public class Indexer {
                 iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
             }
 
-            // Bigger RAM buffer leads to better performance. For us we'll use 1 gig.
+            // Bigger RAM buffer leads to better performance. IF YOU ARE RUNNING THIS IN YOUR OWN COMPUTER,
+            // MAKE SURE TO CHANGE THIS ACCORDINGLY.
             iwc.setRAMBufferSizeMB(1024.0);
 
             // One shot creation of an index writer, which will write our index.
@@ -167,6 +169,7 @@ public class Indexer {
             // year/month/day/hour/minutes/seconds, down the resolution you require.
             // For example the long value 2011021714 would mean
             // February 17, 2011, 2-3 PM.
+
             doc.add(new LongPoint("modified", lastModified));
 
             // Add the contents of the file to a field named "contents".  Specify a Reader,
