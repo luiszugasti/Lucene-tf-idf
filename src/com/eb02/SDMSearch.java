@@ -60,6 +60,7 @@ public class SDMSearch {
 	    Double lamda_ubg = 0.00;
 	    Double lamda_obg = 0.00;
 	    Double map_max = 0.00;
+	    int best_iteration = 0;
 	    Double [] searched_lamda = new Double[3];
 	    String index = "index_test"; //Index directory name. Change it to the correct index path.
 	    String field = "contents";
@@ -285,7 +286,7 @@ public class SDMSearch {
 	    for(int j = 0; j < bg_list.size(); j++) {
 	  	  String path = bg_list.get(j).getDocument();
 	  	  Double final_score = bg_list.stream().filter(o -> o.getDocument() == path).mapToDouble(o -> o.getScore()).sum(); 
-	  	  final_score = final_score/lamda_obg; //LAMDA is a random value from 0.0 to 1.0
+	  	  final_score = final_score * lamda_obg; //LAMDA is a random value from 0.0 to 1.0
 	  	  File f = new File(path);
 	  	  agg_OBG_list.put(f.getName(), final_score);		  	
 	    }
@@ -294,7 +295,7 @@ public class SDMSearch {
 	    for(int j = 0; j < ubg_list.size(); j++) {
 	    	  String path = ubg_list.get(j).getDocument();
 	    	  Double final_score = ubg_list.stream().filter(o -> o.getDocument() == path).mapToDouble(o -> o.getScore()).sum(); 
-		  	  final_score = final_score/lamda_ubg; //LAMDA is a random value from 0.0 to 1.0
+		  	  final_score = final_score * lamda_ubg; //LAMDA is a random value from 0.0 to 1.0
 	    	  File f = new File(path);
 	    	  agg_UBG_list.put(f.getName(), final_score);		  	
 	      }
@@ -303,7 +304,7 @@ public class SDMSearch {
 	    for(int j = 0; j < ug_list.size(); j++) {
 	    	  String path = ug_list.get(j).getDocument();
 	    	  Double final_score = ug_list.stream().filter(o -> o.getDocument() == path).mapToDouble(o -> o.getScore()).sum(); 
-		  	  final_score = final_score/lamda_ug; //LAMDA is a random value from 0.0 to 1.0
+		  	  final_score = final_score * lamda_ug; //LAMDA is a random value from 0.0 to 1.0
 	    	  File f = new File(path);
 	    	  agg_UG_list.put(f.getName(), final_score);		  	
 	      }
@@ -340,6 +341,11 @@ public class SDMSearch {
 	    	searched_lamda[1] = lamda_obg;
 	    	searched_lamda[2] = lamda_ubg;
 	    	}
+	    
+	    else if(map_max == map) {
+	    	best_iteration++;
+	    }
+	    if(best_iteration == 10) break;
 	   }
 	    
 	    System.out.println("Maximum Map Value: " + map_max);
@@ -376,7 +382,7 @@ public class SDMSearch {
 		            map = line;
 		        }
 		        Double map_value = Double.valueOf(map.replaceAll("[^\\d.]", "")); //Extract only the map score.
-		        System.out.println(map_value);
+		        System.out.println("Map value: " + map_value);
 		        return map_value;
 	  }
 }
