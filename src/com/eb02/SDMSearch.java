@@ -59,7 +59,10 @@ public class SDMSearch {
 	    Double lamda_ug = 0.00;
 	    Double lamda_ubg = 0.00;
 	    Double lamda_obg = 0.00;
-	    String index = "index_test"; //Index directory name.
+	    Double map_max = 0.00;
+	    int best_iteration = 0;
+	    Double [] searched_lamda = new Double[3];
+	    String index = "index_test"; //Index directory name. Change it to the correct index path.
 	    String field = "contents";
 	    String queries = null;
 	    int repeat = 0;
@@ -68,7 +71,7 @@ public class SDMSearch {
 	    int hitsPerPage = 1000;
 	    //List of stop-words
 	    String[] words = {"i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"};
-	    Double [] lamda_values = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+	    //Double [] lamda_values = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 	    for(int i = 0;i < args.length;i++) {
 	      if ("-index".equals(args[i])) {
 	        index = args[i+1];
@@ -126,24 +129,30 @@ public class SDMSearch {
 	    if(sb.length() > 0) {
 	    	topic.add(sb.toString());
 	    }
+	  
 	    //Get rid of numbered value and keep only the query terms.
 	    for (int j = 0; j < topic.size(); j++) {
 	    	topic.set(topic.indexOf(topic.get(j)), topic.get(j).split("\\:")[1]);
 	    }
-	    String fname = "SDMSearch-test.test"; //Filename to write to.
-	    BufferedWriter out = new BufferedWriter(new FileWriter(fname, true),32768);
+	    //Perform GRID SEARCH here, loop through process to find best lamdba values.
+	    for(int g = 0; g < 10; g++) {  
+	    String fname = "C:\\Users\\Naffan\\Desktop\\Ryerson\\Capstone\\trec_eval-master\\test\\SDMSearch.test"; //Filename to write to.
+	    BufferedWriter out = new BufferedWriter(new FileWriter(fname, false),32768); //will NOT append, but will overwrite the file.
+	   
 	    Random r = new Random();
 	   
 	    //Retrieve random values for lamda
-	    lamda_ug = Double.valueOf(new DecimalFormat("#.####").format(r.nextDouble()));
-	    lamda_obg = Double.valueOf(new DecimalFormat("#.####").format(r.nextDouble() * (1.0 - lamda_ug)));
-	    lamda_ubg = Double.valueOf(new DecimalFormat("#.####").format(r.nextDouble() * (1.0 - lamda_ug - lamda_obg)));
+	    Double yamma = 0.0000;
+	    lamda_ug = r.nextDouble();
+	    lamda_obg = r.nextDouble() ;
+	    lamda_ubg = r.nextDouble() ;
+	    yamma = lamda_ug + lamda_obg + lamda_ubg;
 	    
-	    System.out.println("Lamda UNIGRAM: " + lamda_ug);
-	    System.out.println("Lamda ORDERED BIGRAM: " + lamda_obg);
-	    System.out.println("Lamda UNORDERED BIGRAM: " + lamda_ubg);
+	    lamda_ug = Double.valueOf(new DecimalFormat("#.####").format(lamda_ug/yamma));
+	    lamda_obg = Double.valueOf(new DecimalFormat("#.####").format(lamda_obg/yamma));;
+	    lamda_ubg = Double.valueOf(new DecimalFormat("#.####").format(lamda_ubg/yamma));
 	    
-	  //Iterate over the topic list
+	    //Iterate over the topic list
 	    for(int e = 0; e < topic.size(); e++){
 	    	System.out.println(topic.get(e)); //Print the topic
 
@@ -277,7 +286,7 @@ public class SDMSearch {
 	    for(int j = 0; j < bg_list.size(); j++) {
 	  	  String path = bg_list.get(j).getDocument();
 	  	  Double final_score = bg_list.stream().filter(o -> o.getDocument() == path).mapToDouble(o -> o.getScore()).sum(); 
-	  	  final_score = final_score/lamda_obg; //LAMDA is a random value from 0.0 to 1.0
+	  	  final_score = final_score * lamda_obg; //LAMDA is a random value from 0.0 to 1.0
 	  	  File f = new File(path);
 	  	  agg_OBG_list.put(f.getName(), final_score);		  	
 	    }
@@ -286,7 +295,7 @@ public class SDMSearch {
 	    for(int j = 0; j < ubg_list.size(); j++) {
 	    	  String path = ubg_list.get(j).getDocument();
 	    	  Double final_score = ubg_list.stream().filter(o -> o.getDocument() == path).mapToDouble(o -> o.getScore()).sum(); 
-		  	  final_score = final_score/lamda_ubg; //LAMDA is a random value from 0.0 to 1.0
+		  	  final_score = final_score * lamda_ubg; //LAMDA is a random value from 0.0 to 1.0
 	    	  File f = new File(path);
 	    	  agg_UBG_list.put(f.getName(), final_score);		  	
 	      }
@@ -295,7 +304,7 @@ public class SDMSearch {
 	    for(int j = 0; j < ug_list.size(); j++) {
 	    	  String path = ug_list.get(j).getDocument();
 	    	  Double final_score = ug_list.stream().filter(o -> o.getDocument() == path).mapToDouble(o -> o.getScore()).sum(); 
-		  	  final_score = final_score/lamda_ug; //LAMDA is a random value from 0.0 to 1.0
+		  	  final_score = final_score * lamda_ug; //LAMDA is a random value from 0.0 to 1.0
 	    	  File f = new File(path);
 	    	  agg_UG_list.put(f.getName(), final_score);		  	
 	      }
@@ -321,11 +330,29 @@ public class SDMSearch {
 
 		}
 
-	    }
-	   
-	    reader.close();
+	 }
 	    out.close();
-	    cmdexe();
+	    Double map = getMap(); //Retrieve map score from TREC_eval
+	    
+	    //GRID SEARCH for best lamda values stored here
+	    if(map_max < map) {
+	    	map_max = map;
+	    	searched_lamda[0] = lamda_ug;
+	    	searched_lamda[1] = lamda_obg;
+	    	searched_lamda[2] = lamda_ubg;
+	    	}
+	    
+	    else if(map_max == map) {
+	    	best_iteration++;
+	    }
+	    if(best_iteration == 10) break;
+	   }
+	    
+	    System.out.println("Maximum Map Value: " + map_max);
+	    System.out.println("Best Lambda UNIGRAM: " + searched_lamda[0]);
+	    System.out.println("Best Lambda ORDERED BIGRAM: " + searched_lamda[1]);
+	    System.out.println("Best Lambda UNORDERED BIGRAM: " + searched_lamda[2]);
+	    reader.close();
 	  }
 	  
 	  public static void appendToFile(BufferedWriter out, String str) {
@@ -340,18 +367,23 @@ public class SDMSearch {
 	  }
 	  
 	  //Opens cmd.exe and runs command for TREC Results.
-	  public static void cmdexe() throws IOException {
+	  public static Double getMap() throws IOException {
 		  ProcessBuilder builder = new ProcessBuilder(
-		            "cmd.exe", "/c", "cd \"C:\\Users\\Naffan\\eclipse-workspace\\LuceneDemo\" && dir"); //Insert the TREC command here!
+		            "cmd.exe", "/c", "cd \"C:\\Users\\Naffan\\Desktop\\Ryerson\\Capstone\\trec_eval-master\" && trec_eval -m map test/CW09_qrels.test test/SDMSearch.test"); //Insert the TREC command here!
 		        builder.redirectErrorStream(true);
 		        Process p = builder.start();
 		        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		        String line;
+		        String map = null;
 		        while (true) {
 		            line = r.readLine();
 		            if (line == null) { break; }
-		            System.out.println(line);
+		            //System.out.println(line);
+		            map = line;
 		        }
+		        Double map_value = Double.valueOf(map.replaceAll("[^\\d.]", "")); //Extract only the map score.
+		        System.out.println("Map value: " + map_value);
+		        return map_value;
 	  }
 }
 
