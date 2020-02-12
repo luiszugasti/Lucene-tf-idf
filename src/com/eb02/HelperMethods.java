@@ -28,7 +28,7 @@ public class HelperMethods {
     public static void doPagingSearch(IndexSearcher searcher, Query query, String runCount, String runName) throws IOException {
 
         // Collect AT MOST, the top 1000 hits - roughly the same as the worst case scenario for relevance_judgements_for_CW09
-        TopDocs results = searcher.search(query, 1);
+        TopDocs results = searcher.search(query, 1000);
         // Put the results in "hits" variable
         ScoreDoc[] hits = results.scoreDocs;
 

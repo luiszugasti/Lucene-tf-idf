@@ -8,6 +8,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.similarities.ClassicSimilarity;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
 
 // Standard Imports
@@ -77,7 +79,9 @@ public class TF_IDF_Search {
         // As a baseline, this works - Why?
         // IndexSearcher implements TF-IDF internally.
 
+        // change the similarity to "classic similarity" - defined as tf-idf.
         IndexSearcher searcher = new IndexSearcher(reader);
+        searcher.setSimilarity(new ClassicSimilarity());
 
         Analyzer analyzer = new StandardAnalyzer();
 
