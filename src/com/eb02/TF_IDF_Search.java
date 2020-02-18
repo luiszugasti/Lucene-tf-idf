@@ -5,12 +5,16 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
+import org.apache.lucene.search.spell.LuceneDictionary;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.BytesRefIterator;
 
 // Standard Imports
 import java.io.BufferedReader;
@@ -74,6 +78,18 @@ public class TF_IDF_Search {
 
         // Open a new IndexReader object, using index.
         IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
+
+        // TEST: Get ALL the terms of an index.
+        LuceneDictionary ld = new LuceneDictionary( reader, "contents" );
+        BytesRefIterator iterator = ld.getEntryIterator();
+        BytesRef byteRef = null;
+        int total_terms_indexed = 0;
+        while ( ( byteRef = iterator.next() ) != null )
+        {
+            String term = byteRef.utf8ToString();
+            System.out.println(term);
+            total_terms_indexed ++;
+        }
 
         // Open a new IndexSearcher object.
         // As a baseline, this works - Why?

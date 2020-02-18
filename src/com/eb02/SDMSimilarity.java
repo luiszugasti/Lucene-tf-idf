@@ -43,20 +43,12 @@ public class SDMSimilarity extends Similarity {
         return (float)Math.log(1.0D + ((double)(docCount - docFreq) + 0.5D) / ((double)docFreq + 0.5D));
     }
 
-    protected float scorePayload(int doc, int start, int end, BytesRef payload) {
-        return 1.0F;
-    }
+//    protected float scorePayload(int doc, int start, int end, BytesRef payload) {
+//        return 1.0F;
+//    }
 
     protected float avgFieldLength(CollectionStatistics collectionStats) {
         return (float)((double)collectionStats.sumTotalTermFreq() / (double)collectionStats.docCount());
-    }
-
-    public void setDiscountOverlaps(boolean v) {
-        this.discountOverlaps = v;
-    }
-
-    public boolean getDiscountOverlaps() {
-        return this.discountOverlaps;
     }
 
     public final long computeNorm(FieldInvertState state) {
@@ -111,7 +103,7 @@ public class SDMSimilarity extends Similarity {
             cache[i] = this.k1 * (1.0F - this.b + this.b * LENGTH_TABLE[i] / avgdl);
         }
 
-        return new org.apache.lucene.search.similarities.BM25Similarity.BM25Scorer(boost, this.k1, this.b, idf, avgdl, cache);
+        return new SDMSimilarity.SDMScorer(boost, this.k1, this.b, idf, avgdl, cache);
     }
 
     public String toString() {
@@ -133,7 +125,7 @@ public class SDMSimilarity extends Similarity {
 
     }
 
-    private static class BM25Scorer extends SimScorer {
+    private static class SDMScorer extends SimScorer {
         private final float boost;
         private final float k1;
         private final float b;
@@ -142,7 +134,7 @@ public class SDMSimilarity extends Similarity {
         private final float[] cache;
         private final float weight;
 
-        BM25Scorer(float boost, float k1, float b, Explanation idf, float avgdl, float[] cache) {
+        SDMScorer(float boost, float k1, float b, Explanation idf, float avgdl, float[] cache) {
             this.boost = boost;
             this.idf = idf;
             this.avgdl = avgdl;
@@ -168,7 +160,7 @@ public class SDMSimilarity extends Similarity {
             List<Explanation> subs = new ArrayList();
             subs.add(freq);
             subs.add(Explanation.match(this.k1, "k1, term saturation parameter", new Explanation[0]));
-            float doclen = org.apache.lucene.search.similarities.BM25Similarity.LENGTH_TABLE[(byte)((int)norm) & 255];
+            float doclen = SDMSimilarity.LENGTH_TABLE[(byte)((int)norm) & 255];
             subs.add(Explanation.match(this.b, "b, length normalization parameter", new Explanation[0]));
             if ((norm & 255L) > 39L) {
                 subs.add(Explanation.match(doclen, "dl, length of field (approximate)", new Explanation[0]));
