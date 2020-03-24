@@ -12,6 +12,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.search.spell.LuceneDictionary;
+import org.apache.lucene.search.spell.NGramDistance;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.BytesRefIterator;

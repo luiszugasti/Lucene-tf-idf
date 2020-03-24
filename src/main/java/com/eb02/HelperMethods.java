@@ -41,13 +41,12 @@ public class HelperMethods {
             hits = searcher.search(query, numTotalHits).scoreDocs;
         }
         int start = 0;
-        int end = numTotalHits;
 
-        for (int i = start; i < end; i++) {
+        for (int i = start; i < numTotalHits; i++) {
 
             Document doc = searcher.doc(hits[i].doc);
             String path = doc.get("path");
-            Float score = hits[i].score;
+            float score = hits[i].score;
             // Simple. Trim after clueweb09PoolFilesTest.
             String[] parts = path.split("/");
 
